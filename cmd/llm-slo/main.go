@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"syscall"
 	"time"
 
@@ -21,7 +22,19 @@ import (
 	"github.com/OTA-EITA/llm-slo/internal/rules"
 )
 
-var version = "dev"
+// version is set with -ldflags "-X main.version=..." in builds; go install
+// leaves it empty and the module version is used instead.
+var version = ""
+
+func init() {
+	if version != "" {
+		return
+	}
+	version = "dev"
+	if bi, ok := debug.ReadBuildInfo(); ok && bi.Main.Version != "" && bi.Main.Version != "(devel)" {
+		version = bi.Main.Version
+	}
+}
 
 const usageText = `llm-slo %s
 
