@@ -1,0 +1,55 @@
+{
+  "listen": ":8080",
+  "metrics_listen": ":9464",
+  "app_header": "X-LLM-App",
+  "apps": ["support-bot", "search", "batch-summary"],
+  "log_requests": true,
+
+  "upstreams": [
+    {
+      "prefix": "/azure",
+      "url": "https://YOUR-RESOURCE.openai.azure.com",
+      "api": "openai",
+      "provider": "azure.ai.openai",
+      "inject_stream_usage": true
+    },
+    {
+      "prefix": "/openai",
+      "url": "https://api.openai.com",
+      "api": "openai",
+      "provider": "openai",
+      "inject_stream_usage": true
+    },
+    {
+      "prefix": "/anthropic",
+      "url": "https://api.anthropic.com",
+      "api": "anthropic",
+      "provider": "anthropic"
+    },
+    {
+      "prefix": "/vertex",
+      "url": "https://us-central1-aiplatform.googleapis.com",
+      "api": "gemini",
+      "provider": "gcp.vertex_ai"
+    }
+  ],
+
+  "prices": {
+    "example-model": {
+      "input_per_mtok": 1.0,
+      "output_per_mtok": 4.0,
+      "cache_read_per_mtok": 0.25
+    }
+  },
+
+  "slos": [
+    { "name": "support-bot-availability", "kind": "availability", "objective": 0.995, "app": "support-bot" },
+    { "name": "support-bot-first-chunk", "kind": "time_to_first_chunk", "objective": 0.95, "threshold_seconds": 2, "app": "support-bot" },
+    { "name": "batch-summary-latency", "kind": "latency", "objective": 0.99, "threshold_seconds": 60, "app": "batch-summary" }
+  ],
+
+  "budgets": [
+    { "app": "support-bot", "usd_per_day": 30 },
+    { "app": "batch-summary", "usd_per_day": 100 }
+  ]
+}
