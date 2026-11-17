@@ -1,0 +1,40 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      PROMETHEUS_VERSION: 3.16.0
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version-file: go.mod
+          check-latest: true
+      - name: Install promtool
+        run: |
+          base="https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VERSION}"
+          file="prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz"
+          curl -fsSLO "$base/$file"
+          curl -fsSL "$base/sha256sums.txt" | grep " $file\$" | sha256sum -c -
+          tar -xzf "$file"
+          sudo install "prometheus-${PROMETHEUS_VERSION}.linux-amd64/promtool" /usr/local/bin/promtool
+          promtool --version
+      - run: test -z "$(gofmt -l .)"
+      - run: go vet ./...
+      - run: go test -race -count=1 ./...
+      - name: Example config and rules
+        run: |
+          go run ./cmd/llm-slo check -config examples/llm-slo.json
+          go run ./cmd/llm-slo rules -config examples/llm-slo.json > rules.yml
+          promtool check rules rules.yml
