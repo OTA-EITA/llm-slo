@@ -44,6 +44,7 @@ func TestContent(t *testing.T) {
 		`gen_ai_client_inference_time_to_first_chunk_seconds_bucket{app="bot",gen_ai_request_model="m-1",error_type="",le="1.5"}`,
 		`llm_slo:error_ratio:rate1h{slo="bot-availability"} > 0.144`,
 		`llm_slo:error_ratio:rate3d{slo="bot-latency"} > 0.05`,
+		`llm_slo:error_ratio:rate5m{slo="bot-availability"} > 0.144`,
 		`sum(increase(llm_slo_cost_usd_total{app="bot"}[1d])) > 10`,
 	} {
 		if !strings.Contains(out, want) {

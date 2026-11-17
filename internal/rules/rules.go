@@ -6,6 +6,7 @@ package rules
 import (
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/OTA-EITA/llm-slo/internal/config"
@@ -120,8 +121,8 @@ func writeSLO(b *strings.Builder, ind string, s config.SLO) {
 		expr := fmt.Sprintf(`%s{slo=%q} > %s
 and
 %s{slo=%q} > %s`,
-			record(s, br.long), s.Name, metrics.FormatFloat(threshold),
-			record(s, br.short), s.Name, metrics.FormatFloat(threshold))
+			record(s, br.long), s.Name, short(threshold),
+			record(s, br.short), s.Name, short(threshold))
 		fmt.Fprintf(b, "%s      - alert: %s\n", ind, alert)
 		writeExpr(b, ind+"        ", expr)
 		fmt.Fprintf(b, "%s        labels:\n%s          severity: %s\n%s          slo: %s\n%s          long_window: %s\n",
@@ -179,6 +180,9 @@ func quote(s string) string {
 	r := strings.NewReplacer(`\`, `\\`, `"`, `\"`, "\n", `\n`)
 	return `"` + r.Replace(s) + `"`
 }
+
+// short drops float noise such as 14.4*0.005 = 0.07200000000000006.
+func short(v float64) string { return strconv.FormatFloat(v, 'g', 12, 64) }
 
 func title(s string) string { return strings.ToUpper(s[:1]) + s[1:] }
 
